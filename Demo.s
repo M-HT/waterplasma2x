@@ -6,7 +6,7 @@
 
 .thumb
 do_effect_T:
-	push {v1, v2, v3, v4}
+#	push {v1, v2, v3, v4}
 
 	LDR r0, =buf
 	LDR v3, =(320*240)
@@ -60,7 +60,7 @@ do_effect_T_loop1:
 	sub r1, r1, #1
 	bne do_effect_T_loop1
 
-	pop {v1, v2, v3, v4}
+#	pop {v1, v2, v3, v4}
 
 	bx lr
 
@@ -89,7 +89,7 @@ wait_vsync_T_loop2:
 #end procedure wait_vsync_T
 
 bufcopy_T:
-	push {v1}
+#	push {v1}
 
 	LDR r0, =buf
 	LDR r1, =frame_buf
@@ -110,7 +110,7 @@ bufcopy_loop_T:
 	sub r3, r3, #1
 	bne bufcopy_loop_T
 
-	pop {v1}
+#	pop {v1}
 
 	bx lr
 
@@ -171,6 +171,28 @@ set_palette_T_loop4:
 .balign 4
 #end procedure set_palette_T
 
+precompute_buffer_T:
+	LDR r0, =buf
+	mov r1, #240
+	mov r3, #13
+precompute_buffer_T_loop1:
+	LDR r2, =320
+precompute_buffer_T_loop2:
+	mov v1, r1
+	mul v1, r2
+	mul v1, r3
+	strb v1, [r0]
+	add r0, r0, #1
+	sub r2, r2, #1
+	bne precompute_buffer_T_loop2
+	sub r1, r1, #1
+	bne precompute_buffer_T_loop1
+
+	bx lr
+
+.balign 4
+#end procedure precompute_buffer_T
+
 .arm
 call_thumb:
 	add ip, ip, #1
@@ -180,13 +202,13 @@ call_thumb:
 
 _start:
 #initialization
-	ldmfd sp!, {r4-r6}
+#	ldmfd sp!, {r4-r6}
 
 	LDR r0, =p_dev_mem
 	mov r1, #2
 	swi 0x900005
-	LDR r1, =dev_mem
-	str r0, [r1]
+#	LDR r1, =dev_mem
+#	str r0, [r1]
 
 	mov r1, #0
 	mov r2, #0x10000
@@ -205,13 +227,13 @@ _start:
 	LDR r0, =p_dev_fb0
 	mov r1, #2
 	swi 0x900005
-	LDR r1, =dev_fb0
-	str r0, [r1]
+#	LDR r1, =dev_fb0
+#	str r0, [r1]
 
 	mov r1, #0
 	LDR r2, =(320*240*2)
 	mov r3, #2
-	mov r4, #1
+#	mov r4, #1
 	mov r5, r0
 	mov r6, #0
 	stmfd sp!, {r1-r6}
@@ -221,7 +243,7 @@ _start:
 	LDR r1, =frame_buf
 	str r0, [r1]
 
-	stmfd sp!, {r4-r6}
+#	stmfd sp!, {r4-r6}
 #end initialization
 
 #set palette
@@ -229,31 +251,16 @@ _start:
 	bl call_thumb
 
 #precompute buffer
-#	stmfd sp!, {v1}
-
-	LDR r0, =buf
-	LDR r1, =240
-	LDR r3, =13
-precompute_buffer_loop1:
-	LDR r2, =320
-precompute_buffer_loop2:
-	mul v1, r1, r2
-	mul v1, r3, v1
-	strb v1, [r0]
-	add r0, r0, #1
-	subS r2, r2, #1
-	bne precompute_buffer_loop2
-	subS r1, r1, #1
-	bne precompute_buffer_loop1
-
-	mov v1, #496
+	ADR ip, precompute_buffer_T
+	bl call_thumb
+	
+	mov v5, #496
 precompute_buffer_loop3:
 	ADR ip, do_effect_T
 	bl call_thumb
-	subS v1, v1, #1
+	subS v5, v5, #1
 	bne precompute_buffer_loop3
 
-#	ldmfd sp!, {v1}
 #end precompute buffer
 
 
@@ -274,23 +281,23 @@ main_loop:
 
 
 #deinitialization
-	LDR r0, =frame_buf
-	ldr r0, [r0]
-	LDR r1, =(320*240*2)
-	swi 0x90005b
-
-	LDR r0, =dev_fb0
-	ldr r0, [r0]
-	swi 0x900006
-	
-	LDR r0, =gp2x_memregs
-	ldr r0, [r0]
-	mov r1, #0x10000
-	swi 0x90005b
-
-	LDR r0, =dev_mem
-	ldr r0, [r0]
-	swi 0x900006
+#	LDR r0, =frame_buf
+#	ldr r0, [r0]
+#	LDR r1, =(320*240*2)
+#	swi 0x90005b
+#
+#	LDR r0, =dev_fb0
+#	ldr r0, [r0]
+#	swi 0x900006
+#	
+#	LDR r0, =gp2x_memregs
+#	ldr r0, [r0]
+#	mov r1, #0x10000
+#	swi 0x90005b
+#
+#	LDR r0, =dev_mem
+#	ldr r0, [r0]
+#	swi 0x900006
 	
 #end deinitialization
 
@@ -304,7 +311,7 @@ main_loop:
 .section .data
 p_dev_mem:
 .asciz "/dev/mem"
-.align 4
+.balign 4
 p_dev_fb0:
 .asciz "/dev/fb0"
 
