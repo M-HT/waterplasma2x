@@ -117,6 +117,60 @@ bufcopy_loop_T:
 .balign 4
 #end procedure bufcopy_T
 
+set_palette_T:
+	LDR r0, =pal
+	mov r1, #0
+	mov r3, #64
+	lsl r2, r3, #5
+
+set_palette_T_loop1:
+	str r1, [r0]
+	str r1, [r0, #4]
+	add r0, #8
+	sub r3, r3, #2
+	beq set_palette_T_after_loop1
+	add r1, r2
+	b set_palette_T_loop1
+
+set_palette_T_after_loop1:
+	mov r3, #64
+	lsr r2, r2, #6
+
+set_palette_T_loop2:
+	str r1, [r0]
+	add r0, #4
+	sub r3, r3, #1
+	beq set_palette_T_after_loop2
+	add r1, r2
+	b set_palette_T_loop2
+
+set_palette_T_after_loop2:
+	mov r3, #64
+	lsr r2, r2, #5
+
+set_palette_T_loop3:
+	str r1, [r0]
+	str r1, [r0, #4]
+	add r0, #8
+	sub r3, r3, #2
+	beq set_palette_T_after_loop3
+	add r1, r2
+	b set_palette_T_loop3
+
+set_palette_T_after_loop3:
+	mov r3, #64
+
+set_palette_T_loop4:
+	str r1, [r0]
+	add r0, #4
+	sub r3, r3, #1
+	bne set_palette_T_loop4
+
+	bx lr
+
+.balign 4
+#end procedure set_palette_T
+
 .arm
 call_thumb:
 	add ip, ip, #1
@@ -171,42 +225,8 @@ _start:
 #end initialization
 
 #set palette
-	LDR r0, =pal
-	LDR r1, =0
-	LDR r3, =64
-
-set_palette_loop1:
-	stmia r0!, {r1}
-	stmia r0!, {r1}
-	subS r3, r3, #2
-	addne r1, r1, #0x0800
-	bne set_palette_loop1
-
-	LDR r3, =64
-
-set_palette_loop2:
-	stmia r0!, {r1}
-	subS r3, r3, #1
-	addne r1, r1, #0x0020
-	bne set_palette_loop2
-
-	LDR r3, =64
-
-set_palette_loop3:
-	stmia r0!, {r1}
-	stmia r0!, {r1}
-	subS r3, r3, #2
-	addne r1, r1, #0x0001
-	bne set_palette_loop3
-
-	LDR r3, =64
-
-set_palette_loop4:
-	stmia r0!, {r1}
-	subS r3, r3, #1
-	bne set_palette_loop4
-
-#end set palette
+	ADR ip, set_palette_T
+	bl call_thumb
 
 #precompute buffer
 #	stmfd sp!, {v1}
@@ -226,7 +246,7 @@ precompute_buffer_loop2:
 	subS r1, r1, #1
 	bne precompute_buffer_loop1
 
-	LDR v1, =500
+	mov v1, #496
 precompute_buffer_loop3:
 	ADR ip, do_effect_T
 	bl call_thumb
