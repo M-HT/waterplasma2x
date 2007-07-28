@@ -117,6 +117,7 @@ bufcopy_loop_T:
 .balign 4
 #end procedure bufcopy_T
 
+# red palette (full)
 set_palette_T:
 	LDR r0, =pal
 	mov r1, #0
@@ -170,6 +171,116 @@ set_palette_T_loop4:
 
 .balign 4
 #end procedure set_palette_T
+
+# green palette (partial - 4th quarter is always the same, 3d quarter is the same as in red palette)
+set_paletteG_T:
+	LDR r0, =pal
+	mov r1, #0
+	mov r3, #64
+	lsr r2, r3, #1
+
+set_paletteG_T_loop1:
+	str r1, [r0]
+	add r0, #4
+	sub r3, r3, #1
+	beq set_paletteG_T_after_loop1
+	add r1, r2
+	b set_paletteG_T_loop1
+
+set_paletteG_T_after_loop1:
+	mov r3, #64
+	lsl r2, r2, #6
+
+set_paletteG_T_loop2:
+	str r1, [r0]
+	str r1, [r0, #4]
+	add r0, #8
+	sub r3, r3, #2
+	beq set_paletteG_T_after_loop2
+	add r1, r2
+	b set_paletteG_T_loop2
+
+set_paletteG_T_after_loop2:
+#	mov r3, #64
+#	lsr r2, r2, #11
+#
+#set_paletteG_T_loop3:
+#	str r1, [r0]
+#	str r1, [r0, #4]
+#	add r0, #8
+#	sub r3, r3, #2
+#	beq set_paletteG_T_after_loop3
+#	add r1, r2
+#	b set_paletteG_T_loop3
+#
+#set_paletteG_T_after_loop3:
+#	mov r3, #64
+#
+#set_paletteG_T_loop4:
+#	str r1, [r0]
+#	add r0, #4
+#	sub r3, r3, #1
+#	bne set_paletteG_T_loop4
+
+	bx lr
+
+.balign 4
+#end procedure set_paletteG_T
+
+# blue palette (partial - 4th quarter is always the same)
+set_paletteB_T:
+	LDR r0, =pal
+	mov r1, #0
+	mov r3, #64
+	lsr r2, r3, #6
+
+set_paletteB_T_loop1:
+	str r1, [r0]
+	str r1, [r0, #4]
+	add r0, #8
+	sub r3, r3, #2
+	beq set_paletteB_T_after_loop1
+	add r1, r2
+	b set_paletteB_T_loop1
+
+set_paletteB_T_after_loop1:
+	mov r3, #64
+	lsl r2, r2, #5
+
+set_paletteB_T_loop2:
+	str r1, [r0]
+	add r0, #4
+	sub r3, r3, #1
+	beq set_paletteB_T_after_loop2
+	add r1, r2
+	b set_paletteB_T_loop2
+
+set_paletteB_T_after_loop2:
+	mov r3, #64
+	lsl r2, r2, #6
+
+set_paletteB_T_loop3:
+	str r1, [r0]
+	str r1, [r0, #4]
+	add r0, #8
+	sub r3, r3, #2
+	beq set_paletteB_T_after_loop3
+	add r1, r2
+	b set_paletteB_T_loop3
+
+set_paletteB_T_after_loop3:
+#	mov r3, #64
+#
+#set_paletteB_T_loop4:
+#	str r1, [r0]
+#	add r0, #4
+#	sub r3, r3, #1
+#	bne set_paletteB_T_loop4
+
+	bx lr
+
+.balign 4
+#end procedure set_paletteB_T
 
 precompute_buffer_T:
 	LDR r0, =buf
@@ -233,7 +344,7 @@ _start:
 	mov r1, #0
 	LDR r2, =(320*240*2)
 	mov r3, #2
-#	mov r4, #1
+	mov r4, #1
 	mov r5, r0
 	mov r6, #0
 	stmfd sp!, {r1-r6}
@@ -311,7 +422,7 @@ main_loop:
 .section .data
 p_dev_mem:
 .asciz "/dev/mem"
-.balign 4
+.align 4
 p_dev_fb0:
 .asciz "/dev/fb0"
 
