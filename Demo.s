@@ -332,6 +332,12 @@ precompute_buffer_T_loop2:
 .balign 4
 #end procedure precompute_buffer_T
 
+palette_jump_table:
+.int set_palette_T
+.int set_paletteG_T
+.int set_paletteB_T
+.int set_paletteW_T
+
 .arm
 call_thumb:
 	add ip, ip, #1
@@ -346,8 +352,8 @@ _start:
 	LDR r0, =p_dev_mem
 	mov r1, #2
 	swi 0x900005
-#	LDR r1, =dev_mem
-#	str r0, [r1]
+#	LDR r7, =dev_mem
+#	str r0, [r7]
 
 	mov r1, #0
 	mov r2, #0x10000
@@ -359,35 +365,31 @@ _start:
 	mov r0, sp
 	swi 0x90005a
 	add sp, sp, #0x18
-	LDR r1, =gp2x_memregs
-	str r0, [r1]
+	LDR r7, =gp2x_memregs
+	str r0, [r7]
 
 
 	LDR r0, =p_dev_fb0
 	mov r1, #2
 	swi 0x900005
-#	LDR r1, =dev_fb0
-#	str r0, [r1]
+#	LDR r7, =dev_fb0
+#	str r0, [r7]
 
 	mov r1, #0
 	LDR r2, =(320*240*2)
 	mov r3, #2
-	mov r4, #1
+#	mov r4, #1
 	mov r5, r0
 	mov r6, #0
 	stmfd sp!, {r1-r6}
 	mov r0, sp
 	swi 0x90005a
 	add sp, sp, #0x18
-	LDR r1, =frame_buf
-	str r0, [r1]
+	LDR r7, =frame_buf
+	str r0, [r7]
 
 #	stmfd sp!, {r4-r6}
 #end initialization
-
-#set palette
-	ADR ip, set_palette_T
-	bl call_thumb
 
 #precompute buffer
 	ADR ip, precompute_buffer_T
@@ -402,10 +404,26 @@ precompute_buffer_loop3:
 
 #end precompute buffer
 
+	mov v7, #1
+	mov v8, #0
 
 main_loop:
 	ADR ip, do_effect_T
 	bl call_thumb
+
+	subS v7, v7, #1
+	bne main_loop_after_pallette_change
+
+	mov v7, #192
+	LDR r0, =palette_jump_table
+
+	ldr ip, [r0, v8]
+	bl call_thumb
+
+	add v8, v8, #4
+	and v8, v8, #15
+
+main_loop_after_pallette_change:
 	ADR ip, wait_vsync_T
 	bl call_thumb
 	ADR ip, bufcopy_T
@@ -450,7 +468,7 @@ main_loop:
 .section .data
 p_dev_mem:
 .asciz "/dev/mem"
-.align 4
+.balign 4
 p_dev_fb0:
 .asciz "/dev/fb0"
 
