@@ -1,7 +1,4 @@
 .arm
-.code 32
-#.arch armv4t
-#.fpu softfpa
 
 .global _start
 
@@ -9,7 +6,7 @@
 
 .thumb
 do_effect_T:
-	push {v1, v2, v4, lr}
+	push {v1, v2, v4}
 
 	LDR r0, =buf
 	LDR v3, =(320*240)
@@ -63,31 +60,35 @@ do_effect_T_loop1:
 	sub r1, r1, #1
 	bne do_effect_T_loop1
 
-	pop {v1, v2, v4, pc}
+	pop {v1, v2, v4}
 
+	bx lr
 
+.balign 4
 #end procedure do_effect_T
 
-.arm
-wait_vsync:
+wait_vsync_T:
 	LDR r0, =gp2x_memregs
 	LDR r1, =0x1182
 	ldr r0, [r0]
+	mov r3, #0x10
 
-#wait_vsync_loop1:
+#wait_vsync_T_loop1:
 #	ldr r2, [r0, r1]
-#	tst r2, #0x10
-#	bne wait_vsync_loop1
+#	tst r2, r3
+#	bne wait_vsync_T_loop1
 
-wait_vsync_loop2:
+wait_vsync_T_loop2:
 	ldr r2, [r0, r1]
-	tst r2, #0x10
-	beq wait_vsync_loop2
+	tst r2, r3
+	beq wait_vsync_T_loop2
 
-	mov pc, lr
+	bx lr
 
-#end procedure wait_vsync
+.balign 4
+#end procedure wait_vsync_T
 
+.arm
 bufcopy:
 	stmfd sp!, {v1, v2, v3, v4, v5, lr}
 
@@ -122,6 +123,11 @@ bufcopy_loop:
 
 #end procedure bufcopy
 
+call_thumb:
+	add ip, ip, #1
+	bx ip
+#end procedure call_thumb
+	
 
 _start:
 #initialization
@@ -227,10 +233,8 @@ precompute_buffer_loop2:
 
 	LDR v1, =500
 precompute_buffer_loop3:
-	ADR r0, do_effect_T
-	ADR lr, precompute_buffer_afterT1
-	bx r0
-precompute_buffer_afterT1:
+	ADR ip, do_effect_T
+	bl call_thumb
 	subS v1, v1, #1
 	bne precompute_buffer_loop3
 
@@ -239,11 +243,10 @@ precompute_buffer_afterT1:
 
 
 main_loop:
-	ADR r0, do_effect_T
-	ADR lr, main_loop_afterT1
-	bx r0
-main_loop_afterT1:
-	bl wait_vsync
+	ADR ip, do_effect_T
+	bl call_thumb
+	ADR ip, wait_vsync_T
+	bl call_thumb
 	bl bufcopy
 
 	LDR r0, =gp2x_memregs
