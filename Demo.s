@@ -6,7 +6,7 @@
 
 .thumb
 do_effect_T:
-	push {v1, v2, v4}
+	push {v1, v2, v3, v4}
 
 	LDR r0, =buf
 	LDR v3, =(320*240)
@@ -60,7 +60,7 @@ do_effect_T_loop1:
 	sub r1, r1, #1
 	bne do_effect_T_loop1
 
-	pop {v1, v2, v4}
+	pop {v1, v2, v3, v4}
 
 	bx lr
 
@@ -88,9 +88,8 @@ wait_vsync_T_loop2:
 .balign 4
 #end procedure wait_vsync_T
 
-.arm
-bufcopy:
-	stmfd sp!, {v1, v2, v3, v4, v5, lr}
+bufcopy_T:
+	push {v1}
 
 	LDR r0, =buf
 	LDR r1, =frame_buf
@@ -98,31 +97,27 @@ bufcopy:
 	LDR r2, =pal
 	LDR r3, =(320*240)
 
-bufcopy_loop:
-	ldmia r0!, {v1}
-	and v3, v1, #0x00ff
-	ldr v2, [r2, v3, lsl #2]
+bufcopy_loop_T:
+	ldrb v1, [r0]
+	lsl v1, #2
+	ldr v1, [r2, v1]
+	strh v1, [r1]
 
-	and v3, v1, #0x00ff00
-	ldr v3, [r2, v3, lsr #6]
-	orr v4, v2, v3, lsl #16
+	add r0, r0, #1
+	add r1, r1, #2
 
-	and v3, v1, #0x00ff0000
-	ldr v2, [r2, v3, lsr #14]
 
-	mov v3, v1, lsr #24
-	ldr v3, [r2, v3, lsl #2]
-	orr v5, v2, v3, lsl #16
+	sub r3, r3, #1
+	bne bufcopy_loop_T
 
-	stmia r1!, {v4, v5}
+	pop {v1}
 
-	subS r3, r3, #4
-	bne bufcopy_loop
+	bx lr
 
-	ldmfd sp!, {v1, v2, v3, v4, v5, pc}
+.balign 4
+#end procedure bufcopy_T
 
-#end procedure bufcopy
-
+.arm
 call_thumb:
 	add ip, ip, #1
 	bx ip
@@ -247,7 +242,8 @@ main_loop:
 	bl call_thumb
 	ADR ip, wait_vsync_T
 	bl call_thumb
-	bl bufcopy
+	ADR ip, bufcopy_T
+	bl call_thumb
 
 	LDR r0, =gp2x_memregs
 	LDR r1, =0x1184
