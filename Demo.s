@@ -135,19 +135,17 @@ set_palette_T_loop1:
 
 set_palette_T_after_loop1:
 	mov r3, #64
-	lsr r2, r2, #6
 
 set_palette_T_loop2:
 	str r1, [r0]
 	add r0, #4
 	sub r3, r3, #1
 	beq set_palette_T_after_loop2
-	add r1, r2
+	add r1, #32
 	b set_palette_T_loop2
 
 set_palette_T_after_loop2:
 	mov r3, #64
-	lsr r2, r2, #5
 
 set_palette_T_loop3:
 	str r1, [r0]
@@ -155,7 +153,7 @@ set_palette_T_loop3:
 	add r0, #8
 	sub r3, r3, #2
 	beq set_palette_T_after_loop3
-	add r1, r2
+	add r1, #1
 	b set_palette_T_loop3
 
 set_palette_T_after_loop3:
@@ -172,24 +170,23 @@ set_palette_T_loop4:
 .balign 4
 #end procedure set_palette_T
 
-# green palette (partial - 4th quarter is always the same, 3d quarter is the same as in red palette)
+# green palette (partial - 4th quarter is the same as in red and blue palette, 3d quarter is the same as in red palette)
 set_paletteG_T:
 	LDR r0, =pal
 	mov r1, #0
 	mov r3, #64
-	lsr r2, r3, #1
+	lsl r2, r3, #5
 
 set_paletteG_T_loop1:
 	str r1, [r0]
 	add r0, #4
 	sub r3, r3, #1
 	beq set_paletteG_T_after_loop1
-	add r1, r2
+	add r1, #32
 	b set_paletteG_T_loop1
 
 set_paletteG_T_after_loop1:
 	mov r3, #64
-	lsl r2, r2, #6
 
 set_paletteG_T_loop2:
 	str r1, [r0]
@@ -202,7 +199,6 @@ set_paletteG_T_loop2:
 
 set_paletteG_T_after_loop2:
 #	mov r3, #64
-#	lsr r2, r2, #11
 #
 #set_paletteG_T_loop3:
 #	str r1, [r0]
@@ -210,7 +206,7 @@ set_paletteG_T_after_loop2:
 #	add r0, #8
 #	sub r3, r3, #2
 #	beq set_paletteG_T_after_loop3
-#	add r1, r2
+#	add r1, #1
 #	b set_paletteG_T_loop3
 #
 #set_paletteG_T_after_loop3:
@@ -227,12 +223,12 @@ set_paletteG_T_after_loop2:
 .balign 4
 #end procedure set_paletteG_T
 
-# blue palette (partial - 4th quarter is always the same)
+# blue palette (partial - 4th quarter is the same as in red and green palette)
 set_paletteB_T:
 	LDR r0, =pal
 	mov r1, #0
 	mov r3, #64
-	lsr r2, r3, #6
+	lsl r2, r3, #5
 
 set_paletteB_T_loop1:
 	str r1, [r0]
@@ -240,24 +236,22 @@ set_paletteB_T_loop1:
 	add r0, #8
 	sub r3, r3, #2
 	beq set_paletteB_T_after_loop1
-	add r1, r2
+	add r1, #1
 	b set_paletteB_T_loop1
 
 set_paletteB_T_after_loop1:
 	mov r3, #64
-	lsl r2, r2, #5
 
 set_paletteB_T_loop2:
 	str r1, [r0]
 	add r0, #4
 	sub r3, r3, #1
 	beq set_paletteB_T_after_loop2
-	add r1, r2
+	add r1, #32
 	b set_paletteB_T_loop2
 
 set_paletteB_T_after_loop2:
 	mov r3, #64
-	lsl r2, r2, #6
 
 set_paletteB_T_loop3:
 	str r1, [r0]
@@ -281,6 +275,40 @@ set_paletteB_T_after_loop3:
 
 .balign 4
 #end procedure set_paletteB_T
+
+# gray palette (full)
+set_paletteW_T:
+	LDR r0, =pal
+	mov r1, #0
+	mov r3, #128
+	lsl r2, r3, #4
+
+set_paletteW_T_loop1:
+	str r1, [r0]
+	str r1, [r0, #4]
+	add r1, #32
+	str r1, [r0, #8]
+	str r1, [r0, #12]
+	add r0, #16
+	sub r3, #4
+	beq set_paletteW_T_after_loop1
+	add r1, #33
+	add r1, r2
+	b set_paletteW_T_loop1
+
+set_paletteW_T_after_loop1:
+	mov r3, #128
+
+set_paletteW_T_loop2:
+	str r1, [r0]
+	add r0, #4
+	sub r3, r3, #1
+	bne set_paletteW_T_loop2
+
+	bx lr
+
+.balign 4
+#end procedure set_paletteW_T
 
 precompute_buffer_T:
 	LDR r0, =buf
@@ -445,6 +473,11 @@ pal:
 .endr
 
 buf:
-.rept 320*240+324
+.rept 320*240
+.byte 0
+.endr
+
+buf_after:
+.rept 324
 .byte 0
 .endr
