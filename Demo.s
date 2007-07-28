@@ -7,28 +7,31 @@
 
 .section .text
 
-do_effect:
-	stmfd sp!, {v1, v2, v8, lr}
+.thumb
+do_effect_T:
+	push {v1, v2, v4, lr}
 
 	LDR r0, =buf
-	LDR r1, =(324)
 	LDR v3, =(320*240)
-	mov v8, #1
+	LDR v4, =320
+	add r1, v4, #4
 
 	ldrb r2, [r0]
-	ldrb r3, [r0, #320]
+	ldrb r3, [r0, v4]
+	add v4, #1
 
 	add v1, r2, r3
 
-do_effect_loop0:
+do_effect_T_loop0:
 
 	ldrb r2, [r0, #1]
-	ldrb r3, [r0, #321]
+	ldrb r3, [r0, v4]
 
 	add v2, r2, r3
 
 	add v1, v1, v2
-	rsb v1, v8, v1, lsr #2
+	lsr v1, v1, #2
+	sub v1, #1
 
 	strb v1, [r0]		@write pixel
 	strb v1, [r0, v3]	@write pixel copy
@@ -36,33 +39,36 @@ do_effect_loop0:
 	mov v1, v2
 
 	add r0, r0, #1
-	subS r1, r1, #1
-	bne do_effect_loop0
+	sub r1, r1, #1
+	bne do_effect_T_loop0
 
 	LDR r1, =(320*240 - 324)
 
-do_effect_loop1:
+do_effect_T_loop1:
 
 	ldrb r2, [r0, #1]
-	ldrb r3, [r0, #321]
+	ldrb r3, [r0, v4]
 
 	add v2, r2, r3
 
 	add v1, v1, v2
-	rsb v1, v8, v1, lsr #2
+	lsr v1, v1, #2
+	sub v1, #1
 
 	strb v1, [r0]		@write pixel
 
 	mov v1, v2
 
 	add r0, r0, #1
-	subS r1, r1, #1
-	bne do_effect_loop1
+	sub r1, r1, #1
+	bne do_effect_T_loop1
 
-	ldmfd sp!, {v1, v2, v8, pc}
+	pop {v1, v2, v4, pc}
 
-#end procedure do_effect
 
+#end procedure do_effect_T
+
+.arm
 wait_vsync:
 	LDR r0, =gp2x_memregs
 	LDR r1, =0x1182
@@ -221,7 +227,10 @@ precompute_buffer_loop2:
 
 	LDR v1, =500
 precompute_buffer_loop3:
-	bl do_effect
+	ADR r0, do_effect_T
+	ADR lr, precompute_buffer_afterT1
+	bx r0
+precompute_buffer_afterT1:
 	subS v1, v1, #1
 	bne precompute_buffer_loop3
 
@@ -230,7 +239,10 @@ precompute_buffer_loop3:
 
 
 main_loop:
-	bl do_effect
+	ADR r0, do_effect_T
+	ADR lr, main_loop_afterT1
+	bx r0
+main_loop_afterT1:
 	bl wait_vsync
 	bl bufcopy
 
