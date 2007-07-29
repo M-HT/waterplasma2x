@@ -71,7 +71,7 @@ do_effect2_T:
 #	push {v1, v2, v3, v4}
 
 	LDR r0, =buf
-	LDR r3, =(320*240)
+	LDR v3, =(320*240)
 	LDR v4, =320
 
 	mov r2, #2
@@ -151,15 +151,15 @@ do_effect2_T_loop11:
 do_effect3_T:
 #	push {v1, v2, v3, v4}
 
-	LDR r0, =(buf + 320*240 - 2)
+	LDR r0, =(buf + 320*240 - 1)
 	LDR v3, =(-(320*240))
-	LDR v4, =(-319)
+	LDR v4, =(-320)
 	neg r1, v4
-	add r1, r1, #2
+	add r1, r1, #1
 
-	ldrb r2, [r0, #1]
+	ldrb r2, [r0]
 	ldrb r3, [r0, v4]
-	sub v4, #1
+	sub r0, #1
 
 	add v1, r2, r3
 
@@ -210,6 +210,85 @@ do_effect3_T_loop1:
 
 .balign 4
 #end procedure do_effect3_T
+
+do_effect4_T:
+#	push {v1, v2, v3, v4}
+
+	LDR r0, =(buf + 320*240 - 1)
+	LDR v3, =(-(320*240))
+	LDR v4, =(-320)
+
+	mov r2, #2
+
+do_effect4_T_loop0:
+	neg r1, v4
+	add r3, v4, #1
+	ldrb v1, [r0, r3]
+	add r3, r3, v4
+	ldrb r3, [r0, r3]
+
+	add v1, v1, r3
+
+do_effect4_T_loop01:
+
+	ldrb v2, [r0]
+	ldrb r3, [r0, v4]
+
+	add v2, v2, r3
+
+	add v1, v1, v2
+	lsr v1, v1, #2
+	sub v1, #1
+
+	strb v1, [r0]		@write pixel
+	strb v1, [r0, v3]	@write pixel copy
+
+	mov v1, v2
+
+	sub r0, r0, #1
+	sub r1, r1, #1
+	bne do_effect4_T_loop01
+	sub r2, r2, #1
+	bne do_effect4_T_loop0
+
+	mov r2, #238
+
+do_effect4_T_loop1:
+	neg r1, v4
+	add r3, v4, #1
+	ldrb v1, [r0, r3]
+	add r3, r3, v4
+	ldrb r3, [r0, r3]
+
+	add v1, v1, r3
+
+do_effect4_T_loop11:
+
+	ldrb v2, [r0]
+	ldrb r3, [r0, v4]
+
+	add v2, v2, r3
+
+	add v1, v1, v2
+	lsr v1, v1, #2
+	sub v1, #1
+
+	strb v1, [r0]		@write pixel
+
+	mov v1, v2
+
+	sub r0, r0, #1
+	sub r1, r1, #1
+	bne do_effect4_T_loop11
+	sub r2, r2, #1
+	bne do_effect4_T_loop1
+
+#	pop {v1, v2, v3, v4}
+
+	bx lr
+
+.balign 4
+#end procedure do_effect4_T
 
 wait_vsync_T:
 	LDR r0, =gp2x_memregs
@@ -552,7 +631,7 @@ precompute_buffer_loop3:
 	mov v8, #0
 
 main_loop:
-	ADR ip, do_effect2_T
+	ADR ip, do_effect3_T
 	bl call_thumb
 
 	subS v7, v7, #1
