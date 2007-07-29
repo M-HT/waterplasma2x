@@ -576,17 +576,20 @@ call_thumb:
 #end procedure call_thumb
 
 draw_tail:
-	LDR v1, =p_dev_mem
-	ldrsb r0, [v1, #9]
-	ldrsh r1, [v1, #10]
-	ldrsb r2, [v1, #(9+12)]
-	ldrsh r3, [v1, #(10+12)]
+	LDR v1, =x_delta
+	mov v4, #4
+
+draw_tail_loop:
+	ldrsb r0, [v1]
+	ldrsh r1, [v1, #1]
+	ldrsh r3, [v1, #3]
+	ldrsb r2, [v1, #5]
 
 	add r1, r1, r0
 	add r3, r3, r2
 
-	strh r1, [v1, #10]
-	strh r3, [v1, #(10+12)]
+	strh r1, [v1, #1]
+	strh r3, [v1, #3]
 
 	cmp r1, #40*16
 	ble draw_tail_x_delta_change
@@ -596,7 +599,7 @@ draw_tail:
 
 draw_tail_x_delta_change:
 	rsb r0, r0, #0
-	strb r0, [v1, #9]
+	strb r0, [v1]
 
 draw_tail_x_delta_no_change:
 
@@ -608,7 +611,7 @@ draw_tail_x_delta_no_change:
 
 draw_tail_y_delta_change:
 	rsb r2, r2, #0
-	strb r2, [v1, #(9+12)]
+	strb r2, [v1, #5]
 
 draw_tail_y_delta_no_change:
 
@@ -630,6 +633,10 @@ draw_tail_y_delta_no_change:
 	strb r0, [v2, #640]
 	strb r0, [v2, #-2]
 	strb r0, [v2, #-640]
+
+	add v1, v1, #6
+	subS v4, v4, #1
+	bne draw_tail_loop
 
 	mov pc, lr
 #end procedure precompute_buffer_T
@@ -773,16 +780,32 @@ main_loop_after_effect_change:
 .section .data
 p_dev_mem:
 .asciz "/dev/mem"
-x_delta:
-.byte 6+16
-x_pos:
-.hword 160*16
+.balign 4
 p_dev_fb0:
 .asciz "/dev/fb0"
-y_delta:
-.byte -12-16
+x_delta:
+.byte 7+16
+x_pos:
+.hword 170*16
 y_pos:
-.hword 120*16
+.hword 110*16
+y_delta:
+.byte -11-16
+
+.byte -13-16
+.hword 140*16
+.hword 100*16
+.byte -7-16
+
+.byte -5-16
+.hword 130*16
+.hword 150*16
+.byte 11+16
+
+.byte 11+16
+.hword 200*16
+.hword 160*16
+.byte 7+16
 
 .section .bss
 dev_mem:
