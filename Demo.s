@@ -555,6 +555,8 @@ precompute_buffer_T_loop2:
 .balign 4
 #end procedure precompute_buffer_T
 
+.ltorg
+
 effect_jump_table:
 .int do_effect_T
 .int do_effect2_T
@@ -572,7 +574,65 @@ call_thumb:
 	add ip, ip, #1
 	bx ip
 #end procedure call_thumb
-	
+
+draw_tail:
+	LDR v1, =p_dev_mem
+	ldrsb r0, [v1, #9]
+	ldrsh r1, [v1, #10]
+	ldrsb r2, [v1, #(9+12)]
+	ldrsh r3, [v1, #(10+12)]
+
+	add r1, r1, r0
+	add r3, r3, r2
+
+	strh r1, [v1, #10]
+	strh r3, [v1, #(10+12)]
+
+	cmp r1, #40*16
+	ble draw_tail_x_delta_change
+
+	cmp r1, #280*16
+	blt draw_tail_x_delta_no_change
+
+draw_tail_x_delta_change:
+	rsb r0, r0, #0
+	strb r0, [v1, #9]
+
+draw_tail_x_delta_no_change:
+
+	cmp r3, #40*16
+	ble draw_tail_y_delta_change
+
+	cmp r3, #200*16
+	blt draw_tail_y_delta_no_change
+
+draw_tail_y_delta_change:
+	rsb r2, r2, #0
+	strb r2, [v1, #(9+12)]
+
+draw_tail_y_delta_no_change:
+
+	mov r2, #320
+	mov r3, r3, lsr #4
+	mul r0, r2, r3
+	add r0, r0, r1, lsr #4
+	LDR v2, =buf
+	add v2, v2, r0
+
+	mov r0, #255
+	strb r0, [v2]
+	strb r0, [v2, #1]
+	strb r0, [v2, #320]
+	strb r0, [v2, #-1]
+	strb r0, [v2, #-320]
+
+	strb r0, [v2, #2]
+	strb r0, [v2, #640]
+	strb r0, [v2, #-2]
+	strb r0, [v2, #-640]
+
+	mov pc, lr
+#end procedure precompute_buffer_T
 
 _start:
 #initialization
@@ -666,6 +726,9 @@ main_loop_after_pallette_change:
 	and v6, v6, #15
 
 main_loop_after_effect_change:
+
+	bl draw_tail
+
 	ADR ip, wait_vsync_T
 	bl call_thumb
 	ADR ip, bufcopy_T
@@ -710,9 +773,16 @@ main_loop_after_effect_change:
 .section .data
 p_dev_mem:
 .asciz "/dev/mem"
-.balign 4
+x_delta:
+.byte 6+16
+x_pos:
+.hword 160*16
 p_dev_fb0:
 .asciz "/dev/fb0"
+y_delta:
+.byte -12-16
+y_pos:
+.hword 120*16
 
 .section .bss
 dev_mem:
@@ -732,7 +802,7 @@ pal:
 .int 0
 .endr
 
-buf_before:
+buf_temp_before:
 .rept 640
 .byte 0
 .endr
@@ -742,7 +812,7 @@ buf:
 .byte 0
 .endr
 
-buf_after:
+buf_temp_after:
 .rept 640
 .byte 0
 .endr
