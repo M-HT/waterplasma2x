@@ -555,6 +555,12 @@ precompute_buffer_T_loop2:
 .balign 4
 #end procedure precompute_buffer_T
 
+effect_jump_table:
+.int do_effect_T
+.int do_effect2_T
+.int do_effect3_T
+.int do_effect4_T
+
 palette_jump_table:
 .int set_palette_T
 .int set_paletteG_T
@@ -627,11 +633,14 @@ precompute_buffer_loop3:
 
 #end precompute buffer
 
-	mov v7, #1
-	mov v8, #0
+	mov v5, #97	@
+	mov v6, #0	@ effect jump table offset
+	mov v7, #1	@
+	mov v8, #0	@ palette jump table offset
 
 main_loop:
-	ADR ip, do_effect3_T
+	LDR ip, =effect_jump_table
+	ldr ip, [ip, v6]
 	bl call_thumb
 
 	subS v7, v7, #1
@@ -647,6 +656,16 @@ main_loop:
 	and v8, v8, #15
 
 main_loop_after_pallette_change:
+
+	subS v5, v5, #1
+	bne main_loop_after_effect_change
+
+	mov v5, #256
+
+	add v6, v6, #4
+	and v6, v6, #15
+
+main_loop_after_effect_change:
 	ADR ip, wait_vsync_T
 	bl call_thumb
 	ADR ip, bufcopy_T
