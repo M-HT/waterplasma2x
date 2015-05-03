@@ -1,3 +1,25 @@
+@@
+@@  Copyright (C) 2007-2015 Roman Pauer
+@@
+@@  Permission is hereby granted, free of charge, to any person obtaining a copy of
+@@  this software and associated documentation files (the "Software"), to deal in
+@@  the Software without restriction, including without limitation the rights to
+@@  use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+@@  of the Software, and to permit persons to whom the Software is furnished to do
+@@  so, subject to the following conditions:
+@@
+@@  The above copyright notice and this permission notice shall be included in all
+@@  copies or substantial portions of the Software.
+@@
+@@  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+@@  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+@@  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+@@  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+@@  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+@@  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+@@  SOFTWARE.
+@@
+
 .arm
 
 .global _start
@@ -690,7 +712,7 @@ _start:
 #precompute buffer
 	ADR ip, precompute_buffer_T
 	bl call_thumb
-	
+
 	mov v5, #496
 precompute_buffer_loop3:
 	ADR ip, do_effect_T
@@ -758,7 +780,7 @@ main_loop_after_effect_change:
 #	LDR r0, =dev_fb0
 #	ldr r0, [r0]
 #	swi 0x900006
-#	
+#
 #	LDR r0, =gp2x_memregs
 #	ldr r0, [r0]
 #	mov r1, #0x10000
@@ -767,7 +789,7 @@ main_loop_after_effect_change:
 #	LDR r0, =dev_mem
 #	ldr r0, [r0]
 #	swi 0x900006
-	
+
 #end deinitialization
 
 #exit
